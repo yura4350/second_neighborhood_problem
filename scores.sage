@@ -2,7 +2,8 @@ from sage.all import matrix
 
 def second_neighborhood_score(A):
     """
-    Calculates a score to find a counterexample to Seymour's Second Neighborhood Conjecture.
+    Score based on a weighted penalty system.
+    Heavily punishes vertices that fail the desired condition, creating a strong gradient.
     """
     n = A.nrows()
     if n == 0:
@@ -14,20 +15,31 @@ def second_neighborhood_score(A):
     for i in range(n):
         Npp_matrix[i, i] = 0
 
-    max_diff = -float('inf')
+    # This will accumulate the total "penalty" of the graph. Our goal is to minimize it.
+    total_penalty = 0
+    penalty_multiplier = 1000  # A vertex that fails is 10x worse than a vertex that succeeds.
 
     for v_idx in range(n):
-        # FIX: Reverted to the manual for loop for summation to ensure compatibility.
+        # Using the manual for loop for summation for compatibility
         out_degree = 0
-        for x in A[v_idx]:
-            out_degree += x
+        for x in A[v_idx]: out_degree += x
 
         size_second_neighborhood = 0
-        for x in Npp_matrix[v_idx]:
-            size_second_neighborhood += x
+        for x in Npp_matrix[v_idx]: size_second_neighborhood += x
         
         diff = size_second_neighborhood - out_degree
-        if diff > max_diff:
-            max_diff = diff
 
-    return float(-max_diff)
+        # Apply the penalty logic
+        if diff < 0:
+            # This is a "good" vertex. Its difference is negative.
+            # Adding it to the penalty makes the total penalty lower (better).
+            total_penalty += diff
+        else:
+            # This is a "bad" vertex. Its difference is 0 or positive.
+            # We add its difference to the penalty, multiplied by the penalty factor.
+            # We add 1 to the difference so that even a difference of 0 gets a penalty.
+            total_penalty += (diff + 1) * penalty_multiplier
+
+    # The search tries to maximize the score, so we return the negative of the penalty.
+    # A lower penalty results in a higher score.
+    return float(-total_penalty)
