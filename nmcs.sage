@@ -1,101 +1,85 @@
 from random import choice, random
-from sage.all import matrix, vector, zero_matrix, ZZ
+from sage.all import zero_matrix, ZZ, matrix
 
 def add_source_or_sink_matrix(A):
     '''Adds a new vertex (as a source or sink) to an adjacency matrix A.'''
     n = A.nrows()
     if n == 0:
-        return zero_matrix(ZZ, 1, 1) # Return a 1x1 zero matrix
+        return zero_matrix(ZZ, 1, 1)
 
     v_connect = choice(range(n))
-    
-    # Create a new (n+1)x(n+1) matrix
     A_new = zero_matrix(ZZ, n + 1, n + 1)
-    A_new.submatrix(0, 0, A) # Copy old matrix into the top-left
+    A_new[0:n, 0:n] = A
 
     if random() < 0.5:
-        # Add edge from new vertex n to v_connect (source)
         A_new[n, v_connect] = 1
     else:
-        # Add edge from v_connect to new vertex n (sink)
         A_new[v_connect, n] = 1
     return A_new
 
 def subdivide_edge_matrix(A):
     '''Subdivides a random edge in an adjacency matrix A.'''
     n = A.nrows()
-    edges = A.nonzero_positions() # List of (row, col) tuples for all edges
+    edges = A.nonzero_positions()
     
     if not edges:
         return A
 
     u, v = choice(edges)
-    
-    # Create a new (n+1)x(n+1) matrix
     A_new = zero_matrix(ZZ, n + 1, n + 1)
-    A_new.submatrix(0, 0, A)
+    A_new[0:n, 0:n] = A
 
-    # Delete original edge and add two new ones via the new vertex n
     A_new[u, v] = 0
     A_new[u, n] = 1
     A_new[n, v] = 1
     return A_new
 
-# nmcs.sage
-
 def add_edge_matrix(A):
-    '''Adds a random non-existent edge to matrix A, ensuring it remains an oriented graph.'''
+    '''Adds a random non-existent edge to matrix A.'''
     n = A.nrows()
     potential_edges = []
     
-    # Loop through all possible pairs of vertices
     for r in range(n):
         for c in range(n):
-            # The condition for a valid new oriented edge is:
-            # 1. Not a self-loop (r != c)
-            # 2. The edge (r, c) does not already exist (A[r, c] == 0)
-            # 3. The reverse edge (c, r) does not exist (A[c, r] == 0) to prevent 2-cycles.
             if r != c and A[r, c] == 0 and A[c, r] == 0:
                 potential_edges.append((r, c))
     
     if potential_edges:
         r, c = choice(potential_edges)
-        A_new = A.copy() # Important to copy before modification
+        A_new = matrix(A)
         A_new[r, c] = 1
         return A_new
         
-    # If no valid edges can be added, return the original matrix
     return A
 
 def NMCS_digraphs(current_matrix, depth, level, score_function, is_parent=True):
-    '''The NMCS algorithm adapted for directed graph adjacency matrices.'''
+    '''The NMCS algorithm for directed graph adjacency matrices.'''
     best_matrix = current_matrix
     best_score = score_function(current_matrix)
 
     if level == 0:
-        next_matrix = current_matrix.copy()
+        next_matrix = matrix(current_matrix)
         for _ in range(depth):
             r = random()
-            if r < 0.4:
-                next_matrix = add_source_or_sink_matrix(next_matrix)
-            elif r < 0.8:
-                next_matrix = subdivide_edge_matrix(next_matrix)
-            else:
-                next_matrix = add_edge_matrix(next_matrix)
+            if r < 0.4: next_matrix = add_source_or_sink_matrix(next_matrix)
+            elif r < 0.8: next_matrix = subdivide_edge_matrix(next_matrix)
+            else: next_matrix = add_edge_matrix(next_matrix)
                 
         if score_function(next_matrix) > best_score:
             best_matrix = next_matrix
     else:
-        # Recursively explore modifications
         modification_functions = [add_source_or_sink_matrix, subdivide_edge_matrix, add_edge_matrix]
         for mod_func in modification_functions:
-            next_matrix = mod_func(current_matrix)
-            if next_matrix is not current_matrix: # Check if a change was made
-                res_matrix = NMCS_digraphs(next_matrix, depth, level - 1, score_function, False)
+            next_matrix_candidate = mod_func(current_matrix)
+            
+            if next_matrix_candidate is not current_matrix:
+                res_matrix = NMCS_digraphs(next_matrix_candidate, depth, level - 1, score_function, False)
                 res_score = score_function(res_matrix)
+                
                 if res_score > best_score:
                     best_matrix = res_matrix
                     best_score = res_score
                     if current_matrix.nrows() > 15 and is_parent:
-                        break # Optimization
+                        break
+                        
     return best_matrix
