@@ -41,12 +41,20 @@ def subdivide_edge_matrix(A):
     A_new[n, v] = 1
     return A_new
 
+# nmcs.sage
+
 def add_edge_matrix(A):
-    '''Adds a random non-existent, non-2-cycle edge to matrix A.'''
+    '''Adds a random non-existent edge to matrix A, ensuring it remains an oriented graph.'''
     n = A.nrows()
     potential_edges = []
+    
+    # Loop through all possible pairs of vertices
     for r in range(n):
         for c in range(n):
+            # The condition for a valid new oriented edge is:
+            # 1. Not a self-loop (r != c)
+            # 2. The edge (r, c) does not already exist (A[r, c] == 0)
+            # 3. The reverse edge (c, r) does not exist (A[c, r] == 0) to prevent 2-cycles.
             if r != c and A[r, c] == 0 and A[c, r] == 0:
                 potential_edges.append((r, c))
     
@@ -55,6 +63,8 @@ def add_edge_matrix(A):
         A_new = A.copy() # Important to copy before modification
         A_new[r, c] = 1
         return A_new
+        
+    # If no valid edges can be added, return the original matrix
     return A
 
 def NMCS_digraphs(current_matrix, depth, level, score_function, is_parent=True):

@@ -7,6 +7,30 @@ from sage.all import DiGraph, graphs, zero_matrix, ZZ, copy
 load('scores.sage')
 load('nmcs.sage')
 
+# Graph generation function
+def create_random_oriented_graph(n, p):
+    """
+    Creates a random oriented G(n,p) graph.
+    This is a backward-compatible alternative to graphs.RandomOrientedGNP.
+    """
+    # Step 1: Create a simple undirected random graph.
+    G_undirected = graphs.RandomGNP(n, p)
+
+    # Step 2: Create an empty directed graph.
+    G_oriented = DiGraph()
+    G_oriented.add_vertices(G_undirected.vertices())
+
+    # Step 3: For each undirected edge, add one of the two possible
+    #         directed edges at random.
+    for u, v, _ in G_undirected.edges():
+        # Flip a coin to decide the direction of the edge.
+        if random() < 0.5:
+            G_oriented.add_edge(u, v)
+        else:
+            G_oriented.add_edge(v, u)
+
+    return G_oriented
+
 def remove_low_degree_matrix(A):
     '''Removes a random vertex with total degree 1 from matrix A.'''
     n = A.nrows()
@@ -23,8 +47,10 @@ def remove_low_degree_matrix(A):
     indices = [i for i in range(n) if i != v_to_remove]
     return A.matrix_from_rows_and_columns(indices, indices)
 
+# amcs.sage
+
 def contract_path_matrix(A):
-    '''Contracts a v with in=1, out=1 in matrix A.'''
+    '''Contracts a v with in=1, out=1 in matrix A, ensuring no 2-cycles are created.'''
     n = A.nrows()
     in_degrees = [sum(A[:, c]) for c in range(n)]
     out_degrees = [sum(A[r, :]) for r in range(n)]
@@ -37,23 +63,23 @@ def contract_path_matrix(A):
     v_contract = choice(contractable)
     
     try:
-        # Find the single predecessor and successor
         predecessor = A[:, v_contract].nonzero_positions()[0][0]
         successor = A[v_contract, :].nonzero_positions()[0][0]
         
         A_new = A.copy()
-        # Add edge from predecessor to successor if valid
-        if predecessor != successor and A_new[predecessor, successor] == 0:
+        
+        # FIX: Check for the forward AND reverse edge before adding the shortcut.
+        # This prevents the creation of a 2-cycle.
+        if predecessor != successor and A_new[predecessor, successor] == 0 and A_new[successor, predecessor] == 0:
             A_new[predecessor, successor] = 1
             
         # Delete the contracted vertex
         indices = [i for i in range(n) if i != v_contract]
         return A_new.matrix_from_rows_and_columns(indices, indices)
     except IndexError:
-        # Should not happen if degrees are correct, but as a safeguard
         return A
 
-def AMCS(score_function, initial_graph=graphs.RandomGNP(10, 0.3).to_directed(), max_depth=5, max_level=3):
+def AMCS(score_function, initial_graph=create_random_oriented_graph(10, 0.3), max_depth=5, max_level=3):
     '''The AMCS algorithm using adjacency matrix operations.'''
     
     # --- Start of the search with a matrix ---
