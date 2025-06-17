@@ -87,7 +87,7 @@ def contract_path_matrix(A):
     except IndexError:
         return A
 
-def AMCS(score_function, initial_graph=create_random_oriented_graph(10, 0.3), max_depth=5, max_level=3):
+def AMCS(score_function, initial_graph=DiGraph([(i, (i+1)%10) for i in range(10)]), max_depth=5, max_level=3):
     '''The AMCS algorithm using adjacency matrix operations.'''
     current_matrix = initial_graph.adjacency_matrix()
     

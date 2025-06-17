@@ -17,15 +17,15 @@ def second_neighborhood_score(A):
 
     # This will accumulate the total "penalty" of the graph. Our goal is to minimize it.
     total_penalty = 0
-    penalty_multiplier = 1000  # A vertex that fails is 1000x worse than a vertex that succeeds. This parameter can be tuned - noticed, that works bad for lower values
+    penalty_multiplier = 10  # A vertex that fails is 1000x worse than a vertex that succeeds. This parameter can be tuned - noticed, that works bad for lower values
 
     for v_idx in range(n):
         # Using the manual for loop for summation for compatibility
         out_degree = 0
-        for x in A[v_idx]: out_degree += x
+        out_degree = sum(1 for x in A[v_idx] if x > 0)
 
         size_second_neighborhood = 0
-        for x in Npp_matrix[v_idx]: size_second_neighborhood += x
+        size_second_neighborhood = sum(1 for x in Npp_matrix[v_idx] if x > 0)
         
         diff = size_second_neighborhood - out_degree
 
