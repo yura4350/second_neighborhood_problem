@@ -129,6 +129,11 @@ def AMCS(score_function, initial_graph=create_random_oriented_graph(10, 0.3), ma
     final_score = score_function(current_matrix)
     if final_score > 0:
         print(f"\nCounterexample found! Score: {final_score}")
+
+        # Printing the adjacency matrix of the counterexample
+        print("\nAdjacency Matrix of Counterexample:")
+        print(current_matrix)
+
         final_graph = DiGraph(current_matrix)
         final_graph.show(edge_labels=False, layout="spring", title=f"Counterexample Found (Score: {final_score})")
     else:

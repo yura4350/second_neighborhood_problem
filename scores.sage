@@ -17,7 +17,7 @@ def second_neighborhood_score(A):
 
     # This will accumulate the total "penalty" of the graph. Our goal is to minimize it.
     total_penalty = 0
-    penalty_multiplier = 1000  # A vertex that fails is 10x worse than a vertex that succeeds.
+    penalty_multiplier = 1000  # A vertex that fails is 1000x worse than a vertex that succeeds. This parameter can be tuned - noticed, that works bad for lower values
 
     for v_idx in range(n):
         # Using the manual for loop for summation for compatibility
@@ -33,7 +33,13 @@ def second_neighborhood_score(A):
         if diff < 0:
             # This is a "good" vertex. Its difference is negative.
             # Adding it to the penalty makes the total penalty lower (better).
+
+            # 1st option suggested (In this case large penalty multiplier to be used to offset how good of a counter-vetix the vertix is)
             total_penalty += diff
+
+            #2nd option suggested (but we also should somehow care about how 'good' of a vertix a good vertix is
+            #total_penalty += 1
+
         else:
             # This is a "bad" vertex. Its difference is 0 or positive.
             # We add its difference to the penalty, multiplied by the penalty factor.
