@@ -1,10 +1,8 @@
-# amcs.sage (Corrected)
-
 # Load the other two files first
 load('scores.sage')
 load('nmcs.sage')
 
-# All necessary imports for this script
+# Necessary imports
 from time import time
 from random import choice, random
 from sage.all import DiGraph, graphs, matrix
@@ -29,7 +27,6 @@ def remove_low_degree_matrix(A):
         
     low_degree_verts = []
     for i in range(n):
-        # FIX: Using the manual for loop for summation that is known to work.
         in_degree = 0
         for r in range(n):
             in_degree += A[r, i]
@@ -87,7 +84,7 @@ def contract_path_matrix(A):
     except IndexError:
         return A
 
-def AMCS(score_function, initial_graph=DiGraph([(i, (i+1)%10) for i in range(10)]), max_depth=10, max_level=10):
+def AMCS(score_function, initial_graph=DiGraph([(i, (i+1)%40) for i in range(40)]), max_depth=10, max_level=10):
     '''The AMCS algorithm using adjacency matrix operations.'''
     current_matrix = initial_graph.adjacency_matrix()
     
@@ -138,6 +135,8 @@ def AMCS(score_function, initial_graph=DiGraph([(i, (i+1)%10) for i in range(10)
         final_graph.show(edge_labels=False, layout="spring", title=f"Counterexample Found (Score: {final_score})")
     else:
         print(f"\nNo counterexample found. Best score: {final_score}")
+        final_graph = DiGraph(current_matrix)
+        final_graph.show(edge_labels=False, layout="spring", title=f"Best graph (Score: {final_score})")
         
     return current_matrix
 

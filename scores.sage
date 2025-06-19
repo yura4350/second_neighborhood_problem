@@ -38,7 +38,7 @@ def second_neighborhood_problem_score(A):
             # total_penalty += diff
 
             # 2nd option suggested (but we also should somehow care about how 'good' of a vertix a good vertix is
-            total_penalty += 1
+            total_penalty -= 1
 
             # 3rd option - no reward to actually find a counterexample?
             # pass
