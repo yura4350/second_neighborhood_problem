@@ -15,9 +15,9 @@ def second_neighborhood_problem_score(A):
     for i in range(n):
         Npp_matrix[i, i] = 0
 
-    # This will accumulate the total "penalty" of the graph. Our goal is to minimize it.
+    # Accumulates the total "penalty" of the graph. Our goal is to minimize it.
     total_penalty = 0
-    penalty_multiplier = 100  # A vertex that fails is 1000x worse than a vertex that succeeds. This parameter can be tuned - noticed, that works bad for lower values
+    penalty_multiplier = 100  # A vertex that fails is 100x worse than a vertex that succeeds. This parameter can be tuned - noticed, that works bad for lower values
 
     for v_idx in range(n):
  
@@ -50,7 +50,7 @@ def second_neighborhood_problem_score(A):
             total_penalty += (diff + 1) * penalty_multiplier
     
     """
-    Graphs with sinks automatically satisfy second neighborhood problem and create local minima.
+    IMPORTANT: Graphs with sinks automatically satisfy second neighborhood problem and create local minima.
     Hence, we largely penalize sinks in O(n * m) - same time complexity as done before, so really no influence
     """
 

@@ -52,6 +52,43 @@ def add_edge_matrix(A):
         
     return A
 
+def rewire_edge_matrix(A):
+    '''
+    Removes a random existing edge and adds a random non-existent edge.
+    This operation preserves the number of vertices and edges.
+    '''
+    n = A.nrows()
+    existing_edges = A.nonzero_positions()
+    
+    # Return if there are no edges to remove
+    if not existing_edges:
+        return A
+
+    # Choose a random edge to remove
+    u_rem, v_rem = choice(existing_edges)
+    
+    # Find potential new edges (where no edge exists in either direction)
+    potential_new_edges = []
+    for r in range(n):
+        for c in range(n):
+            # A new edge can't be a self-loop, and can't already exist in either direction
+            if r != c and A[r, c] == 0 and A[c, r] == 0:
+                potential_new_edges.append((r, c))
+
+    # Return if there's nowhere to add a new edge
+    if not potential_new_edges:
+        return A
+
+    # Choose a random new edge to add
+    u_add, v_add = choice(potential_new_edges)
+
+    # Create a new matrix with the changes
+    A_new = matrix(A)
+    A_new[u_rem, v_rem] = 0
+    A_new[u_add, v_add] = 1
+    
+    return A_new
+
 def NMCS_digraphs(current_matrix, depth, level, score_function, is_parent=True):
     '''The NMCS algorithm for directed graph adjacency matrices.'''
     best_matrix = current_matrix
@@ -61,14 +98,17 @@ def NMCS_digraphs(current_matrix, depth, level, score_function, is_parent=True):
         next_matrix = matrix(current_matrix)
         for _ in range(depth):
             r = random()
-            if r < 0.4: next_matrix = add_source_or_sink_matrix(next_matrix)
-            elif r < 0.8: next_matrix = subdivide_edge_matrix(next_matrix)
-            else: next_matrix = add_edge_matrix(next_matrix)
+            # Probabilities are adjusted to include the new function
+            if r < 0.25: next_matrix = add_source_or_sink_matrix(next_matrix)
+            elif r < 0.5: next_matrix = subdivide_edge_matrix(next_matrix)
+            elif r < 0.75: next_matrix = add_edge_matrix(next_matrix)
+            else: next_matrix = rewire_edge_matrix(next_matrix)
                 
         if score_function(next_matrix) > best_score:
             best_matrix = next_matrix
     else:
-        modification_functions = [add_source_or_sink_matrix, subdivide_edge_matrix, add_edge_matrix]
+        # The new rewire function is added to the list of modifications
+        modification_functions = [add_source_or_sink_matrix, subdivide_edge_matrix, add_edge_matrix, rewire_edge_matrix]
         for mod_func in modification_functions:
             next_matrix_candidate = mod_func(current_matrix)
             
